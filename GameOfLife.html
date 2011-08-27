@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Game of Life</title>
+<meta charset="utf-8" />
+
+<style type="text/css">
+body { margin: 0; padding: 0 }
+#canvas { position: absolute; width: 100%; height: 100%; overflow: hidden }
+</style>
+</head>
+
+<body>
+<canvas id="canvas" />
+</body>
+
+<script type="text/javascript">
+var canvas = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+var squareSize = 10;
+
+var game = new GameOfLife(Math.floor(canvas.width / squareSize), Math.floor(canvas.height / squareSize));
+setInterval("game.step()", 100);
+
+function GameOfLife(width, height)
+{
+this.width = width;
+this.height = height;
+
+this.state = [];
+for (var i = 0; i < this.width; i++) {
+this.state[i] = [];
+for (var j = 0; j < this.height; j++) {
+this.state[i][j] = new Cell(i * squareSize, j * squareSize, Math.random() >= 0.5);
+}
+}
+}
+
+GameOfLife.prototype.step = function() {
+var newState = [];
+for (var i = 0; i < this.width; i++) {
+newState[i] = [];
+for (var j = 0; j < this.height; j++) {
+newState[i][j] = new Cell(this.state[i][j].x, this.state[i][j].y, this.state[i][j].isAlive);
+var numAliveNeighbours = this.countAliveNeighbours(i, j);
+newState[i][j].update(numAliveNeighbours);
+}
+}
+this.state = newState;
+};
+
+GameOfLife.prototype.countAliveNeighbours = function(i, j) {
+var numAliveNeighbours = 0;
+for (var di = -1; di <=1; di++) {
+for (var dj = -1; dj <=1; dj++) {
+if (di ==0 && dj == 0) { continue; }
+
+var ni = i + di;
+var nj = j + dj;
+if (ni < 0) { ni = this.width - 1; }
+if (nj < 0) { nj = this.height - 1; }
+if (ni >= this.width) { ni = 0; }
+if (nj >= this.height) { nj = 0; }
+
+if (this.state[ni][nj].isAlive) { numAliveNeighbours++; }
+}
+}
+
+return numAliveNeighbours;
+};
+
+function Cell(x, y, isAlive)
+{
+this.x = x;
+this.y = y;
+this.isAlive = isAlive;
+}
+
+Cell.prototype.update = function(numAliveNeighbours) {
+if (this.isAlive && numAliveNeighbours < 2) { this.isAlive = false; }
+if (this.isAlive && numAliveNeighbours > 3) { this.isAlive = false; }
+if (!this.isAlive && numAliveNeighbours == 3) { this.isAlive = true; }
+
+if (this.isAlive) { context.fillStyle="black"; }
+else { context.fillStyle="white"; }
+context.fillRect(this.x, this.y, squareSize, squareSize);
+};
+</script>
+</html>
