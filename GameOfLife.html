@@ -17,10 +17,10 @@ body { margin: 0; padding: 0 }
 <script type="text/javascript">
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
-var squareSize = 10;
+var squareSize = 3;
 
 var game = new GameOfLife(Math.floor(canvas.width / squareSize), Math.floor(canvas.height / squareSize));
-setInterval("game.step()", 100);
+setInterval("game.step()", 125);
 
 function GameOfLife(width, height)
 {
