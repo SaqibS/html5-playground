@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Clock</title>
+<meta charset="utf-8" />
+
+<style type="text/css">
+body { margin: 0; padding: 0 }
+#canvas { position: absolute; width: 100%; height: 100%; overflow: hidden }
+audio { display: none }
+</style>
+</head>
+
+<body>
+<canvas id="canvas" />
+<audio id="player" />
+</body>
+
+<script type="text/javascript">
+var canvas = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+var player = document.getElementById("player");
+
+var radius = Math.floor(Math.min(canvas.width, canvas.height) * 0.75) / 2;
+var centerX = canvas.width / 2;
+var centerY = canvas.height / 2;
+
+drawClockFace();
+setInterval("drawHands()", 1000);
+
+function drawClockFace()
+{
+// Background
+context.fillStyle = "silver";
+context.fillRect(0, 0, canvas.width, canvas.height);
+
+// Circle
+context.fillStyle = "white";
+context.beginPath();
+context.arc(centerX, centerY, radius, 0, 2 * Math.PI, true);
+context.fill();
+
+// Numbers
+context.font = "bold 12px sans-serif";
+context.textBaseline = "middle";
+context.textAlign = "center";
+context.fillStyle = "black";
+for (var i = 0; i < 12; i++)
+{
+var hour = i.toString();
+if (hour == "0") { hour = "12"; }
+
+var angle = 2 * Math.PI / 12 * i;
+var point = getOtherEndOfLine(centerX, centerY, angle, 0.9 * radius);
+
+context.fillText(hour, point.X, point.Y);
+}
+}
+
+var hoursPoint = new Object();
+var minutesPoint = new Object();
+var secondsPoint = new Object();
+var tick = false;
+
+function drawHands()
+{
+// Play the sound
+if (tick) { player.src = "tick.wav"; } else { player.src = "tock.wav"; }
+player.play();
+tick = !tick;
+
+// Clear the hands
+context.fillStyle = "white";
+context.beginPath();
+context.arc(centerX, centerY, 0.75 * radius, 0, 2 * Math.PI, true);
+context.fill();
+
+var now = new Date();
+
+drawLine(centerX, centerY, secondsPoint.X, secondsPoint.Y, "white", 1);
+var seconds = now.getSeconds();
+secondsPoint = getOtherEndOfLine(centerX, centerY, 2 * Math.PI / 60 * seconds, 0.75 * radius);
+drawLine(centerX, centerY, secondsPoint.X, secondsPoint.Y, "black", 1);
+
+drawLine(centerX, centerY, minutesPoint.X, minutesPoint.Y, "white", 3);
+var minutes = now.getMinutes();
+minutesPoint = getOtherEndOfLine(centerX, centerY, 2 * Math.PI / 60 * minutes, 0.75 * radius);
+drawLine(centerX, centerY, minutesPoint.X, minutesPoint.Y, "black", 3);
+
+drawLine(centerX, centerY, hoursPoint.X, hoursPoint.Y, "white", 3);
+var hours = now.getHours();
+if (hours >= 12) { hours -= 12; } // Hours are 0-11
+hoursPoint = getOtherEndOfLine(centerX, centerY, (2 * Math.PI / 12 * hours) + (2 * Math.PI / 12 / 60 * minutes), 0.6 * radius);
+drawLine(centerX, centerY, hoursPoint.X, hoursPoint.Y, "black", 3);
+}
+
+function getOtherEndOfLine(x, y, angle, length)
+{
+var point = new Object();
+
+if (angle >= 270) {
+point.X = x - Math.cos(angle - 270) * length;
+point.Y = y - Math.sin(angle - 270) * length;
+} else if (angle >= 180) {
+point.X = x - Math.sin(angle - 180) * length;
+point.Y = y + Math.cos(angle - 180) * length;
+} else if (angle >= 90) {
+point.X = x + Math.cos(angle - 90) * length;
+point.Y = y + Math.sin(angle - 90) * length;
+} else if (angle >=0) {
+point.X = x + Math.sin(angle) * length;
+point.Y = y - Math.cos(angle) * length;
+}
+
+return point;
+}
+
+function drawLine(x1, y1, x2, y2, color, width)
+{
+context.beginPath();
+context.moveTo(x1, y1);
+context.lineTo(x2, y2);
+context.strokeStyle = color;
+context.lineWidth = width;
+context.stroke();
+}
+</script>
+</html>
