@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Twitter Friends</title>
+<meta charset="utf-8" />
+
+<style type="text/css">
+body { background: silver }
+#content { background: white; text: white; margin-left: 25%; margin-right: 25% }
+#friendsList { list-style: none }
+</style>
+</head>
+
+<body>
+<div id="content">
+<h1>Twitter Friends</h1>
+
+<p>Friend (noun):</p>
+<ol>
+<li>A person attached to another by feelings of affection or personal regard.</li>
+<li>Someone who follows you on Twitter, and whom you follow back.</li>
+</ol>
+
+<p>
+<label for="twitterName">Twitter name:</label>
+<input type="text" id="twitterNameInput" />
+<button id="goButton">Go</button>
+</p>
+
+<ul id="friendsList" />
+</div>
+</body>
+
+<script type="text/javascript">
+window.onload = documentReady;
+
+var twitterName;
+var followersIds;
+var followingIds;
+var friendsIds;
+var friendsDetails;
+
+function documentReady()
+{
+document.getElementById("goButton").onclick = getFollowers;
+document.getElementById("twitterNameInput").onkeypress = function(event) {
+if (event && event.keyCode == 13) { getFollowers(); }
+};
+}
+
+function getFollowers()
+{
+twitterName = document.getElementById("twitterNameInput").value;
+var url = "http://api.twitter.com/1/followers/ids.json?screen_name=" + twitterName;
+var xhr = new XMLHttpRequest();
+xhr.open("GET", url, true);
+xhr.onreadystatechange = function() {
+if (xhr.readyState == 4 && xhr.status == 200) {
+followersIds = eval(xhr.responseText);
+getFollowing();
+}
+};
+xhr.send();
+}
+
+function getFollowing()
+{
+var url = "http://api.twitter.com/1/friends/ids.json?screen_name=" + twitterName;
+var xhr = new XMLHttpRequest();
+xhr.open("GET", url, true);
+xhr.onreadystatechange = function() {
+if (xhr.readyState == 4 && xhr.status == 200) {
+followingIds = eval(xhr.responseText);
+calculateFriends();
+}
+};
+xhr.send();
+}
+
+function calculateFriends()
+{
+friendsIds = [];
+for (var i = 0; i < followersIds.length; i++) {
+if (followingIds.indexOf(followersIds[i]) >= 0) { friendsIds[friendsIds.length] = followersIds[i]; }
+}
+
+friendsDetails = [];
+for (var i = 0; i < friendsIds.length; i+=100) {
+lookupFriends(friendsIds.slice(i, Math.min(i + 100, friendsIds.length)));
+}
+}
+
+function lookupFriends(ids) {
+var url = "http://api.twitter.com/1/users/lookup.json?user_id=" + ids.join(",");
+var xhr = new XMLHttpRequest();
+xhr.open("GET", url, true);
+xhr.onreadystatechange = function() {
+if (xhr.readyState == 4 && xhr.status == 200) {
+friendsDetails = friendsDetails.concat(eval(xhr.responseText));
+if (friendsDetails.length == friendsIds.length) { renderResults(); }
+}
+};
+xhr.send();
+}
+
+var friendsList = document.getElementById("friendsList");
+function renderResults()
+{
+for (var i = 0; i < friendsDetails.length; i++) {
+var f = friendsDetails[i];
+var profileImage = "<a href='http://twitter.com/" + f.screen_name + "'><img src='" + f.profile_image_url + "' alt='" + f.screen_name + "' /></a>";
+var nameAndDescription = "<p><em>" + f.name + "</em><br />" + f.description + "</p>";
+friendsList.innerHTML += "<li>" + profileImage + nameAndDescription + "</li>";
+}
+}
+</script>
+</html>
